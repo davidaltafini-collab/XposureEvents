@@ -8,7 +8,7 @@ interface Event {
   id: string;
   title: string;
   slug: string;
-  date: Date;
+  date: string;
   imagePath: string;
   capacity: number;
   soldCount: number;
