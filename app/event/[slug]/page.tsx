@@ -236,8 +236,8 @@ export default async function EventPage({ params }: EventPageProps) {
                         rel="noopener noreferrer"
                         className="flex items-center justify-center w-full py-4 px-8 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold rounded-xl text-lg transition-all shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 transform hover:scale-[1.02]"
                       >
-                        <span className="mr-2">📝</span>
-                        Completează Formularul
+                        <span className="mr-2"></span>
+                        Participă!
                       </a>
                     </div>
                   ) : (
