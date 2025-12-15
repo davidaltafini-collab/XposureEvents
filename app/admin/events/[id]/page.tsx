@@ -18,7 +18,8 @@ interface Event {
   locationName: string;
   locationAddress: string;
   locationMapsUrl: string | null;
-  stripePaymentLink: string;
+  // FIX 1: Acceptăm null aici
+  stripePaymentLink: string | null;
   published: boolean;
 }
 
@@ -49,17 +50,16 @@ export default function EditEventPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     const fetchEvent = async () => {
       try {
-        // --- FIX 1: Adăugat credentials: 'include' pentru GET ---
         const response = await fetch(`/api/admin/events/${params.id}`, {
           method: 'GET',
-          credentials: 'include', // <--- IMPORTANT: Trimite cookie-ul de sesiune
+          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
           },
         });
 
         if (response.status === 401) {
-          router.push('/admin/login'); // Redirect dacă sesiunea a expirat
+          router.push('/admin/login');
           return;
         }
 
@@ -87,7 +87,8 @@ export default function EditEventPage({ params }: { params: { id: string } }) {
           locationAddress: evt.locationAddress,
           locationMapsUrl: evt.locationMapsUrl || '',
           imagePath: evt.imagePath,
-          stripePaymentLink: evt.stripePaymentLink,
+          // FIX 2: Dacă e null, punem ghilimele goale ca să nu crape input-ul
+          stripePaymentLink: evt.stripePaymentLink || '',
           published: evt.published
         });
         setLoading(false);
@@ -113,10 +114,9 @@ export default function EditEventPage({ params }: { params: { id: string } }) {
       const dateTime = `${formData.date}T${formData.time}:00`;
       const eventDate = new Date(dateTime);
 
-      // --- FIX 2: Adăugat credentials: 'include' pentru PUT (Update) ---
       const response = await fetch(`/api/admin/events/${params.id}`, {
         method: 'PUT',
-        credentials: 'include', // <--- IMPORTANT
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -158,10 +158,9 @@ export default function EditEventPage({ params }: { params: { id: string } }) {
     setError('');
 
     try {
-      // --- FIX 3: Adăugat credentials: 'include' pentru DELETE ---
       const response = await fetch(`/api/admin/events/${params.id}`, {
         method: 'DELETE',
-        credentials: 'include', // <--- IMPORTANT
+        credentials: 'include',
       });
 
       const data = await response.json();
