@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../lib"
+		},
+		{
+			"path": "../prisma"
+		},
+		{
+			"path": "../public"
+		},
+		{
+			"path": "../app"
+		}
+	]
+}

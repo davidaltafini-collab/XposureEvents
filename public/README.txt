@@ -1,0 +1,1 @@
+Project successfully initialized!
