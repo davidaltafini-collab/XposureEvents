@@ -131,7 +131,7 @@ export default function Navbar() {
               </Link>
             ))}
             <Link
-              href="/login"
+              href="admin/login"
               onClick={() => setIsMobileMenuOpen(false)}
               className="px-4 py-3 rounded-xl font-medium text-center bg-gradient-to-r from-cyan-500 to-yellow-500 text-gray-900 hover:shadow-lg hover:shadow-cyan-500/50 transition-all duration-300"
             >
