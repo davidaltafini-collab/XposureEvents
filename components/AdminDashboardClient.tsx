@@ -14,7 +14,10 @@ interface Event {
   soldCount: number;
   price: string;
   locationName: string;
-  stripePaymentLink: string;
+  // ⚠️ AICI AM FĂCUT FIX-UL: Am adăugat "?" și "| null"
+  stripePaymentLink?: string | null;
+  description?: string | null;
+  locationLink?: string | null;
   published: boolean;
 }
 
