@@ -37,10 +37,29 @@ export default async function AdminDashboard() {
       totalCapacity,
     };
 
-    // Serializare date
+    // Serializare date - FIXUL ESTE AICI
     console.log("--- 5. Serializăm datele... ---");
+    
+    // NU mai folosim ...event, ci scriem câmpurile manual ca să scăpăm de null
     const serializedEvents = events.map((event) => ({
-      ...event,
+      id: event.id,
+      title: event.title,
+      slug: event.slug,
+      imagePath: event.imagePath,
+      price: event.price.toString(), // Convertim Decimal la string
+      capacity: event.capacity,
+      soldCount: event.soldCount,
+      locationName: event.locationName,
+      locationAddress: event.locationAddress,
+      published: event.published,
+      
+      // AICI REZOLVĂM EROAREA: Dacă e null, punem ""
+      stripePaymentLink: event.stripePaymentLink || "", 
+      description: event.description || "",
+      locationMapsUrl: event.locationMapsUrl || "",
+      locationLink: event.locationMapsUrl || "", // Dublură de siguranță
+
+      // Datele trebuie să fie string-uri
       date: event.date.toISOString(),
       createdAt: event.createdAt.toISOString(),
       updatedAt: event.updatedAt.toISOString(),
