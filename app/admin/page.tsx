@@ -5,30 +5,48 @@ import AdminDashboardClient from '@/components/AdminDashboardClient';
 
 export const dynamic = 'force-dynamic';
 
+// DTO strict: trebuie să corespundă 1:1 cu interface Event din AdminDashboardClient.tsx
+type AdminEventDTO = {
+  id: string;
+  title: string;
+  slug: string;
+  date: string;
+  imagePath: string;
+  capacity: number;
+  soldCount: number;
+  price: string;
+  locationName: string;
+  stripePaymentLink: string | null;
+  description: string | null;
+  locationLink: string | null;
+  published: boolean;
+};
+
 export default async function AdminDashboard() {
-  console.log("--- 1. Începem încărcarea Dashboard ---");
+  console.log('--- 1. Începem încărcarea Dashboard ---');
 
   // 1. Verificăm Auth
   const adminStatus = await isAdmin();
-  console.log("--- 2. Status Admin:", adminStatus);
+  console.log('--- 2. Status Admin:', adminStatus);
 
   if (!adminStatus) {
-    console.log("--- Redirecting to Login ---");
+    console.log('--- Redirecting to Login ---');
     redirect('/admin/login');
   }
 
   // 2. Încercăm să luăm datele
-  console.log("--- 3. Încercăm conexiunea la Prisma (Database)... ---");
-  
+  console.log('--- 3. Încercăm conexiunea la Prisma (Database)... ---');
+
   try {
     const events = await prisma.event.findMany({
       orderBy: { date: 'desc' },
     });
+
     console.log(`--- 4. Prisma a răspuns! S-au găsit ${events.length} evenimente ---`);
 
     const totalTicketsSold = events.reduce((sum, event) => sum + event.soldCount, 0);
     const totalCapacity = events.reduce((sum, event) => sum + event.capacity, 0);
-    const upcomingEvents = events.filter(event => new Date(event.date) >= new Date()).length;
+    const upcomingEvents = events.filter((event) => new Date(event.date) >= new Date()).length;
 
     const stats = {
       totalEvents: events.length,
@@ -37,37 +55,36 @@ export default async function AdminDashboard() {
       totalCapacity,
     };
 
-    // Serializare date - FIXUL ESTE AICI
-    console.log("--- 5. Serializăm datele... ---");
-    
-    // NU mai folosim ...event, ci scriem câmpurile manual ca să scăpăm de null
-    const serializedEvents = events.map((event) => ({
+    // 3. Serializare date (strict conform UI model)
+    console.log('--- 5. Serializăm datele... ---');
+
+    const serializedEvents: AdminEventDTO[] = events.map((event) => ({
       id: event.id,
       title: event.title,
       slug: event.slug,
+      date: event.date.toISOString(),
       imagePath: event.imagePath,
-      price: event.price.toString(), // Convertim Decimal la string
       capacity: event.capacity,
       soldCount: event.soldCount,
-      locationName: event.locationName,
-      locationAddress: event.locationAddress,
-      published: event.published,
-      
-      // AICI REZOLVĂM EROAREA: Dacă e null, punem ""
-      stripePaymentLink: event.stripePaymentLink || "", 
-      description: event.description || "",
-      locationMapsUrl: event.locationMapsUrl || "",
-      locationLink: event.locationMapsUrl || "", // Dublură de siguranță
 
-      // Datele trebuie să fie string-uri
-      date: event.date.toISOString(),
-      createdAt: event.createdAt.toISOString(),
-      updatedAt: event.updatedAt.toISOString(),
+      // dacă e Decimal sau alt tip, String(...) e safe
+      price: String(event.price),
+
+      locationName: event.locationName,
+
+      // păstrăm null (clientul acceptă null)
+      stripePaymentLink: event.stripePaymentLink,
+      description: event.description,
+
+      // în UI ai locationLink (string|null). În DB ai locationMapsUrl.
+      locationLink: event.locationMapsUrl,
+
+      published: event.published,
     }));
 
-    console.log("--- 6. Returnăm JSX (Pagina gata) ---");
-    
-  return (
+    console.log('--- 6. Returnăm JSX (Pagina gata) ---');
+
+    return (
       <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
         <div className="container mx-auto px-4 py-6 md:py-8">
           {/* Header */}
@@ -102,7 +119,7 @@ export default async function AdminDashboard() {
               <p className="text-2xl md:text-3xl font-bold text-white mb-1">{stats.totalEvents}</p>
               <p className="text-xs md:text-sm text-gray-400">Total Evenimente</p>
             </div>
-             <div className="bg-white/5 backdrop-blur-lg rounded-xl md:rounded-2xl p-4 md:p-6 border border-white/10">
+            <div className="bg-white/5 backdrop-blur-lg rounded-xl md:rounded-2xl p-4 md:p-6 border border-white/10">
               <p className="text-2xl md:text-3xl font-bold text-white mb-1">{stats.upcomingEvents}</p>
               <p className="text-xs md:text-sm text-gray-400">Viitoare</p>
             </div>
@@ -120,9 +137,8 @@ export default async function AdminDashboard() {
         </div>
       </div>
     );
-
   } catch (error) {
-    console.error("--- EROARE FATALĂ PRISMA ---", error);
+    console.error('--- EROARE FATALĂ PRISMA ---', error);
     return (
       <div className="min-h-screen flex items-center justify-center text-red-500 font-bold text-xl">
         Eroare la conectarea cu baza de date. Verifică terminalul.
