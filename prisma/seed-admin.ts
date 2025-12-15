@@ -1,9 +1,9 @@
 /**
  * Seed Script pentru Admin
- * 
+ *
  * Rulează acest script pentru a crea/actualiza admin-ul:
  * npx tsx prisma/seed-admin.ts
- * 
+ *
  * Setează variabilele în .env:
  * ADMIN_USERNAME=admin
  * ADMIN_PASSWORD=Admin123!
@@ -13,13 +13,20 @@ import { createAdmin } from '../lib/auth';
 
 async function main() {
   console.log('🌱 Seeding admin user...');
-  
+
   const username = process.env.ADMIN_USERNAME;
   const password = process.env.ADMIN_PASSWORD;
-  
+
+  // ✅ FIX: Validăm env vars ca să nu fie undefined (și ca să treacă TypeScript)
+  if (!username || !password) {
+    console.error('❌ Lipsesc variabilele de mediu pentru seed.');
+    console.error('   Te rog setează în .env: ADMIN_USERNAME și ADMIN_PASSWORD');
+    process.exit(1);
+  }
+
   try {
     const admin = await createAdmin(username, password);
-    
+
     console.log('✅ Admin user created/updated successfully!');
     console.log('📝 Username:', admin.username);
     console.log('🔐 Password:', password);

@@ -1,27 +1,11 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-
-interface Event {
-  id: string;
-  title: string;
-  slug: string;
-  date: string;
-  imagePath: string;
-  capacity: number;
-  soldCount: number;
-  price: string;
-  locationName: string;
-  stripePaymentLink: string | null;  // FĂRĂ "?" - Prisma returnează null, nu undefined
-  description: string | null;         // FĂRĂ "?" - consistență cu Prisma
-  locationLink: string | null;        // FĂRĂ "?" - consistență cu Prisma
-  published: boolean;
-}
+import type { AdminEventDTO } from '@/types/admin';
 
 interface AdminDashboardClientProps {
-  events: Event[];
+  events: AdminEventDTO[];
 }
 
 export default function AdminDashboardClient({ events }: AdminDashboardClientProps) {
@@ -72,15 +56,12 @@ export default function AdminDashboardClient({ events }: AdminDashboardClientPro
       <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-4 md:p-6 lg:p-8 border border-white/10">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <h2 className="text-xl md:text-2xl font-bold text-white">Lista Evenimente</h2>
-          <div className="text-sm text-gray-400">
-            Total: {events.length} evenimente
-          </div>
+          <div className="text-sm text-gray-400">Total: {events.length} evenimente</div>
         </div>
 
         <div className="space-y-3 md:space-y-4">
           {events.map((event) => {
             const isSoldOut = event.soldCount >= event.capacity;
-            const availableTickets = event.capacity - event.soldCount;
             const occupancyRate = (event.soldCount / event.capacity) * 100;
 
             return (
@@ -105,14 +86,14 @@ export default function AdminDashboardClient({ events }: AdminDashboardClientPro
                     <div className="flex flex-col sm:flex-row items-start justify-between gap-2 mb-3">
                       <div className="flex-1 min-w-0 w-full">
                         <div className="flex items-start gap-2 mb-1 flex-wrap">
-                          <h3 className="text-base md:text-lg font-bold text-white">
-                            {event.title}
-                          </h3>
-                          <span className={`flex-shrink-0 px-2 py-1 rounded-md text-xs font-medium ${
-                            event.published
-                              ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                              : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
-                          }`}>
+                          <h3 className="text-base md:text-lg font-bold text-white">{event.title}</h3>
+                          <span
+                            className={`flex-shrink-0 px-2 py-1 rounded-md text-xs font-medium ${
+                              event.published
+                                ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                                : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                            }`}
+                          >
                             {event.published ? 'Publicat' : 'Draft'}
                           </span>
                         </div>
@@ -122,7 +103,8 @@ export default function AdminDashboardClient({ events }: AdminDashboardClientPro
                             day: 'numeric',
                             month: 'short',
                             year: 'numeric',
-                          })} • {event.locationName}
+                          })}{' '}
+                          • {event.locationName}
                         </p>
                       </div>
                       <span className="text-base md:text-lg font-bold gradient-text flex-shrink-0">
@@ -136,9 +118,7 @@ export default function AdminDashboardClient({ events }: AdminDashboardClientPro
                         <span className="text-gray-400">
                           {event.soldCount} / {event.capacity} bilete
                         </span>
-                        <span className={`font-semibold ${
-                          isSoldOut ? 'text-red-400' : 'text-cyan-400'
-                        }`}>
+                        <span className={`font-semibold ${isSoldOut ? 'text-red-400' : 'text-cyan-400'}`}>
                           {occupancyRate.toFixed(0)}%
                         </span>
                       </div>

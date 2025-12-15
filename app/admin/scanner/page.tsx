@@ -2,57 +2,86 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+
+type ScanResultState = {
+  success: boolean;
+  message: string;
+  ticket?: any;
+} | null;
 
 export default function ScannerPage() {
   const [ticketCode, setTicketCode] = useState('');
-  const [scanResult, setScanResult] = useState<{
-    success: boolean;
-    message: string;
-    ticket?: any;
-  } | null>(null);
+  const [scanResult, setScanResult] = useState<ScanResultState>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [scannerMode, setScannerMode] = useState<'camera' | 'manual'>('camera');
-  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+
+  const scannerRef = useRef<any>(null);
   const scannerInitialized = useRef(false);
 
-  // Initialize camera scanner
+  // Initialize camera scanner (safe: dynamic import, evită window issues la build)
   useEffect(() => {
-    if (scannerMode === 'camera' && !scannerInitialized.current) {
+    let cancelled = false;
+
+    const initScanner = async () => {
+      if (scannerMode !== 'camera') return;
+      if (scannerInitialized.current) return;
+
       scannerInitialized.current = true;
-      
-      const scanner = new Html5QrcodeScanner(
-        'qr-reader',
-        {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.0,
-        },
-        false
-      );
 
-      scanner.render(
-        (decodedText) => {
-          // Stop scanner on successful read
-          scanner.clear();
-          scannerInitialized.current = false;
-          setTicketCode(decodedText);
-          handleValidation(decodedText);
-        },
-        (error) => {
-          // Ignore errors - they happen constantly while scanning
-        }
-      );
+      try {
+        const mod = await import('html5-qrcode');
+        if (cancelled) return;
 
-      scannerRef.current = scanner;
+        const Html5QrcodeScanner = (mod as any).Html5QrcodeScanner;
 
-      return () => {
-        if (scannerRef.current) {
-          scannerRef.current.clear().catch(() => {});
-          scannerInitialized.current = false;
-        }
-      };
-    }
+        const scanner = new Html5QrcodeScanner(
+          'qr-reader',
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0,
+          },
+          false
+        );
+
+        scanner.render(
+          (decodedText: string) => {
+            // Stop scanner on successful read
+            try {
+              scanner.clear();
+            } catch {}
+            scannerInitialized.current = false;
+
+            setTicketCode(decodedText);
+            handleValidation(decodedText);
+          },
+          () => {
+            // ignore scan errors (normal while scanning)
+          }
+        );
+
+        scannerRef.current = scanner;
+      } catch (e) {
+        scannerInitialized.current = false;
+        setScanResult({
+          success: false,
+          message: 'Nu pot porni camera scanner. Verifică permisiunile camerei.',
+        });
+      }
+    };
+
+    initScanner();
+
+    return () => {
+      cancelled = true;
+      if (scannerRef.current) {
+        try {
+          scannerRef.current.clear();
+        } catch {}
+        scannerRef.current = null;
+      }
+      scannerInitialized.current = false;
+    };
   }, [scannerMode]);
 
   const handleValidation = async (code: string) => {
@@ -65,34 +94,38 @@ export default function ScannerPage() {
       const response = await fetch('/api/admin/validate-ticket', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ code }),
       });
 
-      const data = await response.json();
+      let data: any = null;
+      try {
+        data = await response.json();
+      } catch {
+        data = null;
+      }
 
       if (response.ok) {
         setScanResult({
           success: true,
           message: 'Bilet valid! Intrare permisă.',
-          ticket: data.ticket,
+          ticket: data?.ticket,
         });
-        
-        // Play success sound or vibration
+
         if ('vibrate' in navigator) {
           navigator.vibrate(200);
         }
       } else {
         setScanResult({
           success: false,
-          message: data.error || 'Bilet invalid',
+          message: data?.error || 'Bilet invalid',
         });
-        
-        // Play error sound or vibration
+
         if ('vibrate' in navigator) {
           navigator.vibrate([100, 50, 100]);
         }
       }
-    } catch (error) {
+    } catch {
       setScanResult({
         success: false,
         message: 'Eroare la verificarea biletului',
@@ -110,7 +143,9 @@ export default function ScannerPage() {
   const handleReset = () => {
     setScanResult(null);
     setTicketCode('');
+
     if (scannerMode === 'camera') {
+      // reinit camera scanner cleanly
       scannerInitialized.current = false;
       setScannerMode('manual');
       setTimeout(() => setScannerMode('camera'), 100);
@@ -151,12 +186,18 @@ export default function ScannerPage() {
           >
             <span className="flex items-center justify-center gap-2">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
               Cameră
             </span>
           </button>
+
           <button
             onClick={() => {
               setScannerMode('manual');
@@ -170,7 +211,12 @@ export default function ScannerPage() {
           >
             <span className="flex items-center justify-center gap-2">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                />
               </svg>
               Manual
             </span>
@@ -181,7 +227,7 @@ export default function ScannerPage() {
         <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10 mb-6">
           {scannerMode === 'camera' ? (
             <div>
-              <div id="qr-reader" className="rounded-xl overflow-hidden"></div>
+              <div id="qr-reader" className="rounded-xl overflow-hidden" />
               <p className="text-sm text-gray-400 text-center mt-4">
                 Poziționează codul QR în fața camerei
               </p>
@@ -203,6 +249,7 @@ export default function ScannerPage() {
                   autoFocus
                 />
               </div>
+
               <button
                 type="submit"
                 disabled={isScanning || !ticketCode.trim()}
@@ -212,7 +259,11 @@ export default function ScannerPage() {
                   <span className="flex items-center justify-center gap-2">
                     <svg className="animate-spin h-6 w-6" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
                     </svg>
                     Se validează...
                   </span>
@@ -229,9 +280,7 @@ export default function ScannerPage() {
           <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
             <div
               className={`p-6 rounded-xl border-2 ${
-                scanResult.success
-                  ? 'bg-green-500/10 border-green-500/50'
-                  : 'bg-red-500/10 border-red-500/50'
+                scanResult.success ? 'bg-green-500/10 border-green-500/50' : 'bg-red-500/10 border-red-500/50'
               }`}
             >
               <div className="flex items-start gap-4">
@@ -245,9 +294,7 @@ export default function ScannerPage() {
                   </svg>
                 )}
                 <div className="flex-1">
-                  <p className={`text-xl font-bold mb-3 ${
-                    scanResult.success ? 'text-green-400' : 'text-red-400'
-                  }`}>
+                  <p className={`text-xl font-bold mb-3 ${scanResult.success ? 'text-green-400' : 'text-red-400'}`}>
                     {scanResult.message}
                   </p>
                   {scanResult.ticket && (
@@ -261,7 +308,7 @@ export default function ScannerPage() {
                 </div>
               </div>
             </div>
-            
+
             <button
               onClick={handleReset}
               className="w-full mt-4 px-6 py-3 rounded-xl font-medium text-white bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-500/30 transition-all duration-300"
@@ -275,7 +322,7 @@ export default function ScannerPage() {
         <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-xl p-4 mt-6">
           <p className="text-sm text-gray-400 flex items-start gap-2">
             <svg className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0 0z" />
             </svg>
             <span>
               Folosește camera pentru a scana codul QR sau introdu manual codul pentru validare.

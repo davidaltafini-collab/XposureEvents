@@ -26,7 +26,7 @@ export async function createAdminToken(userId: string, username: string): Promis
     .setIssuedAt()
     .setExpirationTime('24h')
     .sign(JWT_SECRET);
-  
+
   return token;
 }
 
@@ -36,7 +36,20 @@ export async function createAdminToken(userId: string, username: string): Promis
 export async function verifyAdminToken(token: string): Promise<AdminSession | null> {
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET);
-    return payload as AdminSession;
+
+    // jose returnează JWTPayload; validăm runtime câmpurile de care avem nevoie
+    const userId = (payload as Record<string, unknown>).userId;
+    const username = (payload as Record<string, unknown>).username;
+
+    if (typeof userId !== 'string' || typeof username !== 'string') {
+      return null;
+    }
+
+    // iat/exp pot fi undefined; le normalizăm
+    const iat = typeof payload.iat === 'number' ? payload.iat : 0;
+    const exp = typeof payload.exp === 'number' ? payload.exp : 0;
+
+    return { userId, username, iat, exp };
   } catch (error) {
     return null;
   }
@@ -50,7 +63,7 @@ export async function verifyAdminToken(token: string): Promise<AdminSession | nu
 export async function setAdminSession(userId: string, username: string) {
   const token = await createAdminToken(userId, username);
   const cookieStore = await cookies();
-  
+
   cookieStore.set(COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -74,11 +87,11 @@ export async function clearAdminSession() {
 export async function isAdmin(): Promise<boolean> {
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get(COOKIE_NAME);
-  
+
   if (!sessionCookie?.value) {
     return false;
   }
-  
+
   const session = await verifyAdminToken(sessionCookie.value);
   return !!session;
 }
@@ -89,11 +102,11 @@ export async function isAdmin(): Promise<boolean> {
 export async function getAdminSession(): Promise<AdminSession | null> {
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get(COOKIE_NAME);
-  
+
   if (!sessionCookie?.value) {
     return null;
   }
-  
+
   return verifyAdminToken(sessionCookie.value);
 }
 
@@ -103,24 +116,24 @@ export async function getAdminSession(): Promise<AdminSession | null> {
  * Verifică credențialele admin-ului din baza de date
  */
 export async function verifyAdminCredentials(
-  username: string, 
+  username: string,
   password: string
 ): Promise<{ id: string; username: string } | null> {
   try {
     const admin = await prisma.admin.findUnique({
       where: { username },
     });
-    
+
     if (!admin) {
       return null;
     }
-    
+
     const isValid = await bcrypt.compare(password, admin.passwordHash);
-    
+
     if (!isValid) {
       return null;
     }
-    
+
     return {
       id: admin.id,
       username: admin.username,
@@ -136,7 +149,7 @@ export async function verifyAdminCredentials(
  */
 export async function createAdmin(username: string, password: string) {
   const passwordHash = await bcrypt.hash(password, 12);
-  
+
   const admin = await prisma.admin.upsert({
     where: { username },
     update: { passwordHash },
@@ -145,6 +158,6 @@ export async function createAdmin(username: string, password: string) {
       passwordHash,
     },
   });
-  
+
   return admin;
 }

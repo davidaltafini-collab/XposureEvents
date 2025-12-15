@@ -2,30 +2,13 @@ import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { isAdmin } from '@/lib/auth';
 import AdminDashboardClient from '@/components/AdminDashboardClient';
+import type { AdminEventDTO } from '@/types/admin';
 
 export const dynamic = 'force-dynamic';
-
-// DTO strict: trebuie să corespundă 1:1 cu interface Event din AdminDashboardClient.tsx
-type AdminEventDTO = {
-  id: string;
-  title: string;
-  slug: string;
-  date: string;
-  imagePath: string;
-  capacity: number;
-  soldCount: number;
-  price: string;
-  locationName: string;
-  stripePaymentLink: string | null;
-  description: string | null;
-  locationLink: string | null;
-  published: boolean;
-};
 
 export default async function AdminDashboard() {
   console.log('--- 1. Începem încărcarea Dashboard ---');
 
-  // 1. Verificăm Auth
   const adminStatus = await isAdmin();
   console.log('--- 2. Status Admin:', adminStatus);
 
@@ -34,7 +17,6 @@ export default async function AdminDashboard() {
     redirect('/admin/login');
   }
 
-  // 2. Încercăm să luăm datele
   console.log('--- 3. Încercăm conexiunea la Prisma (Database)... ---');
 
   try {
@@ -55,7 +37,6 @@ export default async function AdminDashboard() {
       totalCapacity,
     };
 
-    // 3. Serializare date (strict conform UI model)
     console.log('--- 5. Serializăm datele... ---');
 
     const serializedEvents: AdminEventDTO[] = events.map((event) => ({
@@ -66,19 +47,11 @@ export default async function AdminDashboard() {
       imagePath: event.imagePath,
       capacity: event.capacity,
       soldCount: event.soldCount,
-
-      // dacă e Decimal sau alt tip, String(...) e safe
       price: String(event.price),
-
       locationName: event.locationName,
-
-      // păstrăm null (clientul acceptă null)
       stripePaymentLink: event.stripePaymentLink,
       description: event.description,
-
-      // în UI ai locationLink (string|null). În DB ai locationMapsUrl.
       locationLink: event.locationMapsUrl,
-
       published: event.published,
     }));
 

@@ -1,15 +1,23 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { clearAdminSession } from '@/lib/auth';
+import { NextResponse } from 'next/server';
 
-export async function POST(request: NextRequest) {
+const COOKIE_NAME = 'admin_session';
+
+export async function POST() {
   try {
-    await clearAdminSession();
-    return NextResponse.json({ success: true });
+    const res = NextResponse.json({ success: true });
+
+    // Ștergem cookie-ul pe response (cel mai sigur în serverless)
+    res.cookies.set(COOKIE_NAME, '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 0,
+      path: '/',
+    });
+
+    return res;
   } catch (error) {
     console.error('Logout error:', error);
-    return NextResponse.json(
-      { error: 'Logout failed' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Logout failed' }, { status: 500 });
   }
 }
