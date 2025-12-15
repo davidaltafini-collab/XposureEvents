@@ -14,10 +14,9 @@ interface Event {
   soldCount: number;
   price: string;
   locationName: string;
-  // ⚠️ AICI AM FĂCUT FIX-UL: Am adăugat "?" și "| null"
-  stripePaymentLink?: string | null;
-  description?: string | null;
-  locationLink?: string | null;
+  stripePaymentLink: string | null;  // FĂRĂ "?" - Prisma returnează null, nu undefined
+  description: string | null;         // FĂRĂ "?" - consistență cu Prisma
+  locationLink: string | null;        // FĂRĂ "?" - consistență cu Prisma
   published: boolean;
 }
 
