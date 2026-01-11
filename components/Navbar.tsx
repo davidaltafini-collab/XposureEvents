@@ -17,6 +17,11 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // (4) Închide meniul la schimbarea rutei
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
+
   const isActive = (path: string) => pathname === path;
 
   const navLinks = [
@@ -108,55 +113,43 @@ export default function Navbar() {
         </div>
       </div>
 
-     {/* Mobile Menu */}
-<div
-  className={`md:hidden fixed left-0 right-0 top-16 z-50 transition-all duration-200 ${
-    isMobileMenuOpen ? 'pointer-events-auto' : 'pointer-events-none'
-  }`}
->
-  {/* Overlay */}
-  <div
-    onClick={() => setIsMobileMenuOpen(false)}
-    className={`fixed inset-0 bg-black/40 transition-opacity duration-200 ${
-      isMobileMenuOpen ? 'opacity-100' : 'opacity-0'
-    }`}
-  />
-
-  {/* Panel */}
-  <div
-    className={`relative mx-4 mt-3 rounded-2xl bg-gray-900/98 backdrop-blur-xl border border-cyan-500/10 transform transition-all duration-200 ${
-      isMobileMenuOpen ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-2 scale-[0.98]'
-    }`}
-  >
-    <div className="px-4 py-6">
-      <div className="flex flex-col gap-4">
-        {navLinks.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            onClick={() => setIsMobileMenuOpen(false)}
-            className={`px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
-              isActive(link.href)
-                ? 'bg-gradient-to-r from-cyan-500/10 to-yellow-500/10 text-cyan-400 border border-cyan-500/20'
-                : 'text-gray-300 hover:bg-white/5 hover:text-white'
-            }`}
-          >
-            {link.label}
-          </Link>
-        ))}
-
-        <Link
-          href="/admin/login"
-          onClick={() => setIsMobileMenuOpen(false)}
-          className="px-4 py-3 rounded-xl font-medium text-center bg-gradient-to-r from-cyan-500 to-yellow-500 text-gray-900 hover:shadow-lg hover:shadow-cyan-500/50 transition-all duration-200"
+      {/* Mobile Menu */}
+      <div
+        // (2) transition-all -> transition-[max-height,opacity]
+        className={`md:hidden overflow-hidden transition-[max-height,opacity] duration-300 ${
+          isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+        }`}
+      >
+        <div
+          // (3) adăugat will-change + transform-gpu
+          className="px-4 py-6 bg-gray-900/98 backdrop-blur-xl border-t border-cyan-500/10 will-change-[opacity] transform-gpu"
         >
-          Admin Login
-        </Link>
+          <div className="flex flex-col gap-4">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={`px-4 py-3 rounded-xl font-medium transition-all duration-300 ${
+                  isActive(link.href)
+                    ? 'bg-gradient-to-r from-cyan-500/10 to-yellow-500/10 text-cyan-400 border border-cyan-500/20'
+                    : 'text-gray-300 hover:bg-white/5 hover:text-white'
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+            <Link
+              // (1) href relativ -> absolut
+              href="/admin/login"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="px-4 py-3 rounded-xl font-medium text-center bg-gradient-to-r from-cyan-500 to-yellow-500 text-gray-900 hover:shadow-lg hover:shadow-cyan-500/50 transition-all duration-300"
+            >
+              Admin Login
+            </Link>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-</div>
-
     </nav>
   );
 }
