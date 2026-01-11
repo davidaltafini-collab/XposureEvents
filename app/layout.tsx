@@ -5,17 +5,25 @@ import Footer from '@/components/Footer';
 
 export const metadata: Metadata = {
   title: 'XPOSURE Events - Evenimente exclusive în orașul tău',
-  description: 'Descoperă și cumpără bilete pentru cele mai tari evenimente. Platformă sigură cu QR code tickets și plăți prin Stripe.',
+  description: 'Descoperă și cumpără bilete pentru cele mai tari evenimente...',
   keywords: ['evenimente', 'bilete', 'xposure', 'concerte', 'petreceri', 'festivaluri'],
 
   metadataBase: new URL('https://xposure-events.ro'),
+
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+    ],
+    apple: '/apple-touch-icon.png',
+  },
 
   openGraph: {
     title: 'XPOSURE Events',
     description: 'Evenimente exclusive în orașul tău',
     type: 'website',
     locale: 'ro_RO',
-
     images: ['/og-image.png'],
   },
 
@@ -23,7 +31,6 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'XPOSURE Events',
     description: 'Evenimente exclusive în orașul tău',
-
     images: ['/og-image.png'],
   },
 
@@ -32,6 +39,7 @@ export const metadata: Metadata = {
     follow: true,
   },
 };
+
 
 
 export default function RootLayout({
