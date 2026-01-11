@@ -127,6 +127,137 @@ export async function sendTicketEmail(
     </body>
     </html>
   `;
+// Generam Pdf
+  function formatRoDate(d: Date) {
+  return new Date(d).toLocaleDateString('ro-RO', {
+    weekday: 'long',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
+// Word wrap simplu pentru pdf-lib (font standard)
+function wrapText(text: string, maxCharsPerLine: number) {
+  const words = text.split(/\s+/);
+  const lines: string[] = [];
+  let line = '';
+
+  for (const w of words) {
+    const test = line ? `${line} ${w}` : w;
+    if (test.length > maxCharsPerLine) {
+      if (line) lines.push(line);
+      line = w;
+    } else {
+      line = test;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+export async function generateParentalConsentPdf(data: {
+  eventTitle: string;
+  eventDate: Date;
+  eventLocation: string;
+  organizerName?: string;
+}) {
+  const pdfDoc = await PDFDocument.create();
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+  // A4 (points)
+  const pageWidth = 595.28;
+  const pageHeight = 841.89;
+  const margin = 50;
+
+  const page1 = pdfDoc.addPage([pageWidth, pageHeight]);
+  const page2 = pdfDoc.addPage([pageWidth, pageHeight]);
+
+  const organizer = data.organizerName ?? 'ALTMAR GROUP S.R.L.';
+  const eventDateStr = formatRoDate(data.eventDate);
+
+  // Helper draw text
+  let y1 = pageHeight - margin;
+  const drawLine1 = (txt: string, bold = false, size = 11) => {
+    const f = bold ? fontBold : font;
+    page1.drawText(txt, { x: margin, y: y1, size, font: f });
+    y1 -= size + 8;
+  };
+
+  let y2 = pageHeight - margin;
+  const drawLine2 = (txt: string, bold = false, size = 11) => {
+    const f = bold ? fontBold : font;
+    page2.drawText(txt, { x: margin, y: y2, size, font: f });
+    y2 -= size + 8;
+  };
+
+  // -------- PAGE 1 --------
+  drawLine1('ACORD PARENTAL', true, 16);
+  drawLine1('PARTICIPARE EVENIMENT', true, 13);
+  y1 -= 6;
+
+  drawLine1('Subsemnatul(a),', false, 11);
+  drawLine1('Nume și prenume părinte / tutore legal: .................................................................');
+  drawLine1('CNP: ...........................................................................................................');
+  drawLine1('Domiciliu: ....................................................................................................');
+  drawLine1('Telefon: ........................................................................................................');
+  drawLine1('E-mail: .........................................................................................................');
+  y1 -= 4;
+  drawLine1('în calitate de părinte / tutore legal, declar pe propria răspundere că sunt reprezentantul legal al minorului:', false, 11);
+  drawLine1('Nume și prenume copil: .........................................................................................');
+  drawLine1('Data nașterii: .................................................................................................');
+  drawLine1('Vârsta: ...........................................................................................................');
+  y1 -= 8;
+
+  drawLine1('DECLARAȚIE', true, 13);
+  drawLine1('Prin prezenta:', false, 11);
+
+  // Punctul 1 are variabile
+  const p1 = `1. Îmi exprim acordul ca minorul menționat mai sus să participe la evenimentul ${data.eventTitle}, organizat de ${organizer}, în data de ${eventDateStr}, la locația ${data.eventLocation}.`;
+  const p1Lines = wrapText(p1, 95);
+  for (const ln of p1Lines) drawLine1(ln, false, 11);
+
+  // Restul pe pagina 2, ca să nu înghesuim
+  // -------- PAGE 2 --------
+  const rest = [
+    '2. Declar că am luat cunoștință de natura recreativă a evenimentului și de regulile de participare stabilite de organizator.',
+    '3. Îmi asum răspunderea pentru minorul meu, confirmând că acesta este apt din punct de vedere medical și fizic pentru participarea la eveniment.',
+    '4. Sunt de acord ca organizatorul să stabilească reguli de ordine și disciplină și să poată exclude minorul din eveniment în cazul nerespectării acestora, fără obligația returnării contravalorii biletului.',
+    '5. Declar că organizatorul nu oferă supraveghere individuală și că participarea are loc într-un cadru organizat, dar recreativ.',
+    '6. Declar că am fost informat(ă) că evenimentul nu implică vânzarea sau consumul de alcool de către minori.',
+    '',
+    'FOTO – VIDEO (opțional, dar recomandat)',
+    '☐ Sunt de acord     ☐ Nu sunt de acord',
+    'ca minorul să fie fotografiat / filmat în cadrul evenimentului, materialele putând fi utilizate în scop de promovare online (social media), fără caracter comercial individual.',
+    '',
+    'DATA ȘI SEMNĂTURA',
+    'Data: .............................................',
+    'Semnătura părinte / tutore legal: .....................................................',
+    'Nume complet (lizibil): .................................................................',
+    '',
+    'Observație:',
+    'Prezentul acord este valabil exclusiv pentru evenimentul menționat mai sus.',
+  ];
+
+  for (const paragraph of rest) {
+    if (!paragraph) {
+      y2 -= 10;
+      continue;
+    }
+    const isTitle =
+      paragraph === 'FOTO – VIDEO (opțional, dar recomandat)' ||
+      paragraph === 'DATA ȘI SEMNĂTURA' ||
+      paragraph === 'DECLARAȚIE';
+
+    const lines = wrapText(paragraph, 95);
+    for (const ln of lines) drawLine2(ln, isTitle, isTitle ? 12 : 11);
+    if (isTitle) y2 -= 4;
+  }
+
+  const bytes = await pdfDoc.save();
+  return Buffer.from(bytes);
+}
 
   // Trimitem email cu QR code ca attachment (CID)
   await transporter.sendMail({
