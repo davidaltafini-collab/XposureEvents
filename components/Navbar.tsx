@@ -13,11 +13,15 @@ export default function Navbar() {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
-    window.addEventListener('scroll', handleScroll);
+
+    // rulează o dată imediat (evită stări greșite la load)
+    handleScroll();
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // (4) Închide meniul la schimbarea rutei
+  // închide meniul la schimbarea rutei
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [pathname]);
@@ -30,10 +34,12 @@ export default function Navbar() {
     { href: '/contact', label: 'Contact' },
   ];
 
+  const shouldShowSolidNav = isScrolled || isMobileMenuOpen;
+
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 will-change-[background-color,backdrop-filter,opacity] transform-gpu ${
+        shouldShowSolidNav
           ? 'bg-gray-900/95 backdrop-blur-xl border-b border-cyan-500/10 shadow-lg shadow-cyan-500/5'
           : 'bg-transparent'
       }`}
@@ -115,15 +121,11 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       <div
-        // (2) transition-all -> transition-[max-height,opacity]
         className={`md:hidden overflow-hidden transition-[max-height,opacity] duration-300 ${
           isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
         }`}
       >
-        <div
-          // (3) adăugat will-change + transform-gpu
-          className="px-4 py-6 bg-gray-900/98 backdrop-blur-xl border-t border-cyan-500/10 will-change-[opacity] transform-gpu"
-        >
+        <div className="px-4 py-6 bg-gray-900/98 backdrop-blur-xl border-t border-cyan-500/10 will-change-[opacity] transform-gpu">
           <div className="flex flex-col gap-4">
             {navLinks.map((link) => (
               <Link
@@ -140,7 +142,6 @@ export default function Navbar() {
               </Link>
             ))}
             <Link
-              // (1) href relativ -> absolut
               href="/admin/login"
               onClick={() => setIsMobileMenuOpen(false)}
               className="px-4 py-3 rounded-xl font-medium text-center bg-gradient-to-r from-cyan-500 to-yellow-500 text-gray-900 hover:shadow-lg hover:shadow-cyan-500/50 transition-all duration-300"
