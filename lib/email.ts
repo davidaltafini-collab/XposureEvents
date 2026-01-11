@@ -1,6 +1,5 @@
 import nodemailer from 'nodemailer';
 import QRCode from 'qrcode';
-import { PDFDocument, StandardFonts } from 'pdf-lib';
 
 
 const transporter = nodemailer.createTransport({
