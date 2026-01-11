@@ -115,10 +115,10 @@ export async function sendTicketEmail(
           <div class="warning-box">
             <p style="margin: 0 0 10px 0;"><strong>⚠️ Important:</strong></p>
             <ul style="margin: 0; padding-left: 20px;">
+              <li>Minorii sunt rugați să aibă acordul parental completat pentru a participa</li>
               <li>Prezintă acest cod QR la intrarea în eveniment</li>
               <li>Codul poate fi scanat o singură dată</li>
               <li>Păstrează acest email până după eveniment</li>
-              <li>Poți folosi și codul text de mai sus dacă QR nu funcționează</li>
             </ul>
           </div>
           
