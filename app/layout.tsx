@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'ro_RO',
 
-    images: ['/og-image.jpg'],
+    images: ['/og-image.png'],
   },
 
   twitter: {
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     title: 'XPOSURE Events',
     description: 'Evenimente exclusive în orașul tău',
 
-    images: ['/og-image.jpg'],
+    images: ['/og-image.png'],
   },
 
   robots: {
