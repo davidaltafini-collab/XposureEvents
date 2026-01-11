@@ -7,22 +7,32 @@ export const metadata: Metadata = {
   title: 'XPOSURE Events - Evenimente exclusive în orașul tău',
   description: 'Descoperă și cumpără bilete pentru cele mai tari evenimente. Platformă sigură cu QR code tickets și plăți prin Stripe.',
   keywords: ['evenimente', 'bilete', 'xposure', 'concerte', 'petreceri', 'festivaluri'],
+
+  metadataBase: new URL('https://xposure-events.ro'),
+
   openGraph: {
     title: 'XPOSURE Events',
     description: 'Evenimente exclusive în orașul tău',
     type: 'website',
     locale: 'ro_RO',
+
+    images: ['/og-image.jpg'],
   },
+
   twitter: {
     card: 'summary_large_image',
     title: 'XPOSURE Events',
     description: 'Evenimente exclusive în orașul tău',
+
+    images: ['/og-image.jpg'],
   },
+
   robots: {
     index: true,
     follow: true,
   },
 };
+
 
 export default function RootLayout({
   children,
