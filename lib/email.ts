@@ -128,6 +128,7 @@ export async function sendTicketEmail(
   `;
 // Generam Pdf
   function formatRoDate(d: Date) {
+  const { PDFDocument, StandardFonts } = await import('pdf-lib');
   return new Date(d).toLocaleDateString('ro-RO', {
     weekday: 'long',
     day: '2-digit',
@@ -155,7 +156,7 @@ function wrapText(text: string, maxCharsPerLine: number) {
   return lines;
 }
 
-export async function generateParentalConsentPdf(data: {
+async function generateParentalConsentPdf(data: {
   eventTitle: string;
   eventDate: Date;
   eventLocation: string;
