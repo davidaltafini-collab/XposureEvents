@@ -147,7 +147,7 @@ export default async function EventPage({ params }: EventPageProps) {
                   <svg className="w-5 h-5 text-cyan-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span>Biletele sunt disponibile la locație</span>
+                  <span>Biletele includ cod QR pentru acces rapid la eveniment</span>
                 </li>
                 {/* Afișăm info despre plată doar dacă NU e extern */}
                 {!event.isExternal && (
@@ -155,14 +155,14 @@ export default async function EventPage({ params }: EventPageProps) {
                     <svg className="w-5 h-5 text-cyan-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                     </svg>
-                    <span></span>
+                    <span>Plăți securizate prin Stripe</span>
                   </li>
                 )}
                 <li className="flex items-start gap-3">
                   <svg className="w-5 h-5 text-cyan-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
-                  <span>Biletul este valabil pentru o singură persoană</span>
+                  <span>Biletul va fi trimis instant prin email după finalizarea plății</span>
                 </li>
               </ul>
             </div>
@@ -181,7 +181,7 @@ export default async function EventPage({ params }: EventPageProps) {
                 </div>
 
                 {/* Availability */}
-                <div className="mb-6 pb-6 border-b border-white/10">
+                {/* <div className="mb-6 pb-6 border-b border-white/10">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-sm text-gray-400">Disponibilitate</span>
                     <span className={`px-4 py-1.5 rounded-full text-xs font-semibold ${
@@ -193,10 +193,10 @@ export default async function EventPage({ params }: EventPageProps) {
                     }`}>
                       {isSoldOut ? 'Sold Out' : `${availableTickets} locuri`}
                     </span>
-                  </div>
+                  </div> */}
                   
                   {/* Progress bar */}
-                  <div className="w-full bg-white/5 rounded-full h-2 overflow-hidden">
+                 {/* <div className="w-full bg-white/5 rounded-full h-2 overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-cyan-500 to-yellow-500 transition-all duration-500"
                       style={{ width: `${(event.soldCount / event.capacity) * 100}%` }}
@@ -205,7 +205,7 @@ export default async function EventPage({ params }: EventPageProps) {
                   <p className="text-xs text-gray-500 mt-2 text-center">
                     {event.soldCount} / {event.capacity} bilete vândute
                   </p>
-                </div>
+                </div> */}
 
                 {/* Purchase Area */}
                 {isSoldOut ? (
