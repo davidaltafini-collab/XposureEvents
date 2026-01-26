@@ -166,7 +166,7 @@ export default async function HomePage() {
                     {/* Price & Availability */}
                     <div className="pt-4 border-t border-white/10 flex items-center justify-between">
                       <span className="text-2xl font-bold gradient-text">
-                        {event.price}
+                        {event.price} RON
                       </span>
                       <span className={`px-4 py-2 rounded-full text-xs font-semibold ${
                         isSoldOut
