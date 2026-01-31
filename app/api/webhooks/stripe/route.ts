@@ -44,6 +44,12 @@ export async function POST(request: NextRequest) {
         console.error('Ticket not found for session:', session.id);
         return NextResponse.json({ received: true });
       }
+      await prisma.ticket.update({
+        where: { id: ticket.id },
+        data: {
+          paymentStatus: 'PAID'
+        },
+      });
 
       // Update event sold count
       await prisma.event.update({
