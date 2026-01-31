@@ -49,6 +49,12 @@ export default function AdminDashboardClient({ events }: AdminDashboardClientPro
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </Link>
+          <Link
+            href="/admin/raffle"
+            className="bg-gray-800 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-900 transition flex items-center justify-center gap-2"
+          >
+            <span>🎱</span> Tombolă Globală
+          </Link>
         </div>
       </div>
 
